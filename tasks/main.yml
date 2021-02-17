@@ -1,1 +1,6 @@
 ---
+- name: Install Software for DNS
+  include_tasks: install.yml
+
+- name: Configure Software for DNS
+  include_tasks: configure.yml

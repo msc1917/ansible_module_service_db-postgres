@@ -1,0 +1,7 @@
+---
+- name: Install Postgres-Package
+  apt:
+    name: [ "postgresql" ]
+    state: present
+    update_cache: no
+  become: yes
