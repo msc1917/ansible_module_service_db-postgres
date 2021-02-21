@@ -1,6 +1,32 @@
 ---
-- name: Install Software for DNS
+- name: Install PostgreSQL Database Server Software
   include_tasks: install.yml
+  when: 
+    - postgres is defined
 
-- name: Configure Software for DNS
+- name: Check Data Directory of PostgreSQL Database Server
+  community.general.postgresql_query:
+    db: postgres
+    query: SHOW data_directory;
+  become: yes
+  become_user: "postgres"
+  changed_when: false
+  when: 
+    - postgres is defined
+  register: datadir_location
+
+# - name: Print a message
+#   ansible.builtin.debug:
+#     msg: "{{ datadir_location.query_result[0]['data_directory'] }}"
+
+- name: Move PostgreSQL Database Data-Directory
+  include_tasks: move_datadir.yml
+  when: 
+    - postgres is defined
+    - postgres.datadir is defined
+    - postgres.datadir not in datadir_location.query_result[0]['data_directory']
+
+- name: Configure PostgreSQL Database Server
   include_tasks: configure.yml
+  when: 
+    - postgres is defined

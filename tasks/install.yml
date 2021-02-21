@@ -1,7 +1,7 @@
 ---
 - name: Install Postgres-Package
   apt:
-    name: [ "postgresql" ]
+    name: [ "postgresql", "python3-psycopg2" ]
     state: present
     update_cache: no
   become: yes

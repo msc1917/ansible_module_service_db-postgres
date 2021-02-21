@@ -1,1 +1,4 @@
 ---
+- name: Data Directory
+  ansible.builtin.debug:
+    msg: "{{ datadir_location.query_result[0]['data_directory'] }}"
