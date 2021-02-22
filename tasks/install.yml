@@ -5,3 +5,12 @@
     state: present
     update_cache: no
   become: yes
+
+- name: adding existing admin-users to group postgres
+  user:
+    name: '{{ item.name }}'
+    groups: postgres
+    append: yes
+  become: yes
+  with_items: 
+    - "{{ admin_users }}"

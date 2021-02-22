@@ -1,1 +1,4 @@
 ---
+default_postgres_configfile: "/etc/postgresql/11/main/postgresql.conf"
+default_postgres_hbaconf:    "/etc/postgresql/11/main/pg_hba.conf"
+default_postgres_ident:      "/etc/postgresql/11/main/pg_ident.conf"

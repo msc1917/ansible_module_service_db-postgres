@@ -4,6 +4,14 @@
   when: 
     - postgres is defined
 
+- name: Check if postgres is running postgres
+  ansible.builtin.systemd:
+    name: postgresql
+    daemon_reload: yes
+    state: started
+    enabled: yes
+  become: yes
+
 - name: Check Data Directory of PostgreSQL Database Server
   community.general.postgresql_query:
     db: postgres
@@ -13,10 +21,12 @@
   changed_when: false
   when: 
     - postgres is defined
+  ignore_errors: yes
   register: datadir_location
 
-# - name: Print a message
-#   ansible.builtin.debug:
+- name: Print a message
+  ansible.builtin.debug:
+    msg: "{{ datadir_location.failed }}"
 #     msg: "{{ datadir_location.query_result[0]['data_directory'] }}"
 
 - name: Move PostgreSQL Database Data-Directory
@@ -24,6 +34,7 @@
   when: 
     - postgres is defined
     - postgres.datadir is defined
+    - not datadir_location.failed
     - postgres.datadir not in datadir_location.query_result[0]['data_directory']
 
 - name: Configure PostgreSQL Database Server

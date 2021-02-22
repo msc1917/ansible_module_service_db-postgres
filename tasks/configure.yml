@@ -1,1 +1,79 @@
 ---
+- name: Setup postgres configuration ({{ default_postgres_configfile }})
+  ansible.builtin.lineinfile:
+    path: "{{ default_postgres_configfile }}"
+    regexp: "^{{ item.key }} = "
+    insertafter: "^#{{ item.key }} = "
+    line: "{{ item.key }} = {{ item.value }}"
+    state: present
+  become: yes
+  notify: restart postgres
+  with_dict: 
+    "max_connections":       "{{ postgres.connection.max_connections | default('100', true) }}"
+    "port":                  "{{ postgres.connection.port | default('5432', true) }}"
+    "listen_addresses":      "{{ postgres.connection.listen_addresses | default('local', true) }}"
+    "bonjour":               "{{ postgres.connection.bonjour | default('off', true) }}"
+    "work_mem":              "{{ postgres.memory.work_mem | default('4MB', true) }}"
+    "shared_buffers":        "{{ postgres.memory.shared_buffers | default('128MB', true) }}"
+    "maintenance_work_mem":  "{{ postgres.memory.maintenance_work_mem | default('64MB', true) }}"
+
+# - name: Data Directory
+#   ansible.builtin.debug:
+#     msg: "{{ '%-7s' | format(item.type) | default('local', true) | lower }} {{ '%-15s' | format(item.database) | default('all') | lower }} {{ '%-15s' | format(item.user) | default('all') | lower }} {{ '%-23s' | format(item.address) | default('') | lower }} {{ '%-7s' | format(item.method) | default('md5') | lower }}   # {{ item.comment | default('') }}"
+#   with_items: 
+#     - "{{ postgres.pg_hba }}"
+
+- name: Setup postgres configuration ({{ default_postgres_hbaconf }})
+  ansible.builtin.lineinfile:
+    path: "{{ default_postgres_hbaconf }}"
+    insertafter: "^# \"local\" is for Unix domain socket connections only:"
+    line: "{{ '%-7s' | format(item.type) | default('local', true) | lower }} {{ '%-15s' | format(item.database) | default('all') | lower }} {{ '%-15s' | format(item.user) | default('all') | lower }} {{ '%-23s' | format(item.address) | default('') | lower }} {{ '%-7s' | format(item.method) | default('md5') | lower }}   # {{ item.comment | default('') }}"
+    state: present
+  become: yes
+  notify: reload postgres
+  with_items: 
+    - "{{ postgres.pg_hba }}"
+  when:
+    - item.type.lower() in [ 'local' ]
+    - item.address == ""
+
+- name: Setup postgres configuration ({{ default_postgres_hbaconf }})
+  ansible.builtin.lineinfile:
+    path: "{{ default_postgres_hbaconf }}"
+    insertafter: "^# IPv4 local connections:"
+    line: "{{ '%-7s' | format(item.type) | default('local', true) | lower }} {{ '%-15s' | format(item.database) | default('all') | lower }} {{ '%-15s' | format(item.user) | default('all') | lower }} {{ '%-23s' | format(item.address) | default('') | lower }} {{ '%-7s' | format(item.method) | default('md5') | lower }}   # {{ item.comment | default('') }}"
+    state: present
+  become: yes
+  notify: reload postgres
+  with_items: 
+    - "{{ postgres.pg_hba }}"
+  when:
+    - item.type.lower() in [ 'host', 'hostssl', 'hostnossl' ]
+    - item.address | ipaddr('bool')
+    - item.address | ipv4()
+
+- name: Setup postgres configuration ({{ default_postgres_hbaconf }})
+  ansible.builtin.lineinfile:
+    path: "{{ default_postgres_hbaconf }}"
+    insertafter: "^# IPv6 local connections:"
+    line: "{{ '%-7s' | format(item.type) | default('local', true) | lower }} {{ '%-15s' | format(item.database) | default('all') | lower }} {{ '%-15s' | format(item.user) | default('all') | lower }} {{ '%-23s' | format(item.address) | default('') | lower }} {{ '%-7s' | format(item.method) | default('md5') | lower }}   # {{ item.comment | default('') }}"
+    state: present
+  become: yes
+  notify: reload postgres
+  with_items: 
+    - "{{ postgres.pg_hba }}"
+  when:
+    - item.type.lower() in [ 'host', 'hostssl', 'hostnossl' ]
+    - item.address | ipaddr('bool')
+    - item.address | ipv6()
+
+- name: Setup postgres configuration ({{ default_postgres_ident }})
+  ansible.builtin.lineinfile:
+    path: "{{ default_postgres_ident }}"
+    insertafter: "^# MAPNAME       SYSTEM-USERNAME         PG-USERNAME"
+    line: "{{ '%-15s' | format(item.map) }} {{ '%-23s' | format(item.source) }} {{ item.target }}"
+    state: present
+  become: yes
+  notify: reload postgres
+  with_items: 
+    - "{{ postgres.pg_ident }}"

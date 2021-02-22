@@ -1,4 +1,43 @@
 ---
-- name: Data Directory
-  ansible.builtin.debug:
-    msg: "{{ datadir_location.query_result[0]['data_directory'] }}"
+# - name: Data Directory
+#   ansible.builtin.debug:
+#     msg: "{{ datadir_location.query_result[0]['data_directory'] }}"
+
+- name: Stop postgres database
+  ansible.builtin.systemd:
+    name: postgresql
+    daemon_reload: yes
+    state: stopped
+    enabled: yes
+  become: yes
+
+# - name: Synchronization postgres data directories
+#   ansible.posix.synchronize:
+#     src: "{{ datadir_location.query_result[0]['data_directory'] }}"
+#     dest: "{{ postgres.datadir }}"
+#   become: yes
+
+- name: Copy postgres data directories
+  ansible.builtin.copy:
+    src: "{{ datadir_location.query_result[0]['data_directory'] }}/"
+    remote_src: true
+    dest: "{{ postgres.datadir }}/"
+    owner: postgres
+    group: postgres
+    mode: preserve
+  become: yes
+
+- name: Set new data directory for postgres
+  ansible.builtin.lineinfile:
+    path: "{{ default_postgres_configfile }}"
+    regexp: "^data_directory = "
+    line: "data_directory = '{{ postgres.datadir }}'  # use data in another directory"
+  become: yes
+
+- name: Start postgres database
+  ansible.builtin.systemd:
+    name: postgresql
+    daemon_reload: yes
+    state: started
+    enabled: yes
+  become: yes
