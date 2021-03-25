@@ -24,10 +24,9 @@
   ignore_errors: yes
   register: datadir_location
 
-- name: Print a message
-  ansible.builtin.debug:
-    msg: "{{ datadir_location.failed }}"
-#     msg: "{{ datadir_location.query_result[0]['data_directory'] }}"
+# - name: Info to Data Directory of PostgreSQL Database Server
+#   ansible.builtin.debug:
+#     msg: "{{ datadir_location.failed }}"
 
 - name: Move PostgreSQL Database Data-Directory
   include_tasks: move_datadir.yml
