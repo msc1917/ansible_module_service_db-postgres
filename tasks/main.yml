@@ -4,13 +4,15 @@
   when: 
     - postgres is defined
 
-- name: Check if postgres is running postgres
+- name: Check if postgres is running
   ansible.builtin.systemd:
     name: postgresql
     daemon_reload: yes
     state: started
     enabled: yes
   become: yes
+  when: 
+    - postgres is defined
 
 - name: Check Data Directory of PostgreSQL Database Server
   community.general.postgresql_query:
